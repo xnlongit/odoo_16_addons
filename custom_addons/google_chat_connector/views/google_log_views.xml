@@ -1,0 +1,47 @@
+<!-- views/google_log_views.xml -->
+<odoo>
+  <record id="view_google_chat_log_tree" model="ir.ui.view">
+    <field name="name">google.chat.log.tree</field>
+    <field name="model">google.chat.log</field>
+    <field name="arch" type="xml">
+      <tree string="Google Chat Message Log">
+        <field name="create_date"/>
+        <field name="config_id"/>
+        <field name="space_id"/>
+        <field name="status"/>
+        <field name="user_id"/>
+        <field name="message"/>
+      </tree>
+    </field>
+  </record>
+
+  <record id="view_google_chat_log_form" model="ir.ui.view">
+    <field name="name">google.chat.log.form</field>
+    <field name="model">google.chat.log</field>
+    <field name="arch" type="xml">
+      <form string="Google Chat Message Log">
+        <sheet>
+          <group>
+            <field name="create_date" readonly="1"/>
+            <field name="config_id" readonly="1"/>
+            <field name="space_id" readonly="1"/>
+            <field name="status" readonly="1"/>
+            <field name="user_id" readonly="1"/>
+          </group>
+          <group>
+            <field name="message" readonly="1"/>
+            <field name="response" readonly="1"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_google_chat_log" model="ir.actions.act_window">
+      <field name="name">Google Chat Log</field>
+      <field name="res_model">google.chat.log</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+
+  <menuitem id="menu_google_chat_log" name="Message Log" parent="menu_google_chat_root" action="action_google_chat_log"/>
+</odoo>

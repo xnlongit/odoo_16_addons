@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    <record id="view_google_chat_config_form" model="ir.ui.view">
+      <field name="name">google.chat.config.form</field>
+      <field name="model">google.chat.config</field>
+        <field name="arch" type="xml">
+            <header>
+                <button name="action_login_google" type="object" string="Authenticate with Google" class="btn-primary"
+                            help="Click to authenticate and get access token from Google."/>
+                <button name="action_test_connection" type="object" string="Test Connection" class="btn-secondary"
+                            help="Test if your credentials are valid and can connect to Google Chat."/>
+            </header>
+            <form string="Sales Order Item">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                          <field name="name" placeholder="Configuration Name"/>
+                          <field name="client_id" attrs="{'required': True}"
+                                 help="Google Cloud OAuth Client ID. See documentation for how to get this."/>
+                          <field name="client_secret" attrs="{'required': True}"
+                                 password="True"
+                                 help="Google Cloud OAuth Client Secret. See documentation for how to get this."/>
+                          <field name="access_token" readonly="1"
+                                 help="Access token for Google Chat API. Will be auto-filled after authentication."/>
+                          <field name="refresh_token" readonly="1"
+                                 help="Refresh token for Google Chat API. Will be auto-filled after authentication."/>
+                          <field name="token_expiry" readonly="1"
+                                 help="Token expiry time."/>
+                          <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_google_chat_config_tree" model="ir.ui.view">
+      <field name="name">google.chat.config.tree</field>
+      <field name="model">google.chat.config</field>
+      <field name="arch" type="xml">
+        <tree string="Google Chat Configurations">
+          <field name="name"/>
+          <field name="client_id"/>
+          <field name="company_id"/>
+          <field name="access_token"/>
+          <field name="token_expiry"/>
+        </tree>
+      </field>
+    </record>
+
+    <record id="action_google_chat_config" model="ir.actions.act_window">
+      <field name="name">Google Chat Configurations</field>
+      <field name="res_model">google.chat.config</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_google_chat_root" name="Google Chat" sequence="10"/>
+    <menuitem id="menu_google_chat_config" name="Configurations" parent="menu_google_chat_root" action="action_google_chat_config"/>
+  </data>
+</odoo>

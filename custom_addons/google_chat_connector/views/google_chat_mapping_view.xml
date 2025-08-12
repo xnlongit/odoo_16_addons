@@ -1,0 +1,49 @@
+<!-- views/google_mapping_views.xml -->
+<odoo>
+  <record id="view_google_chat_mapping_tree" model="ir.ui.view">
+    <field name="name">google.chat.mapping.tree</field>
+    <field name="model">google.chat.mapping</field>
+    <field name="arch" type="xml">
+      <tree string="Notification Mapping">
+        <field name="model_id"/>
+        <field name="event_type"/>
+        <field name="space_id"/>
+        <field name="template_id"/>
+        <field name="active"/>
+      </tree>
+    </field>
+  </record>
+
+  <record id="view_google_chat_mapping_form" model="ir.ui.view">
+    <field name="name">google.chat.mapping.form</field>
+    <field name="model">google.chat.mapping</field>
+    <field name="arch" type="xml">
+      <form string="Notification Mapping">
+        <sheet>
+          <group>
+            <group>
+              <field name="model_id"
+                     help="Select the Odoo model (e.g. Sale Order, Invoice, Leave) to send notifications for."/>
+              <field name="event_type"
+                     help="Select the event type (Create, Update, Delete) that will trigger the notification."/>
+              <field name="space_id"
+                     help="Google Chat Space ID. You can get this from your Google Chat space URL."/>
+              <field name="template_id"
+                     help="Select the email template to use for the notification message."/>
+              <field name="active"
+                     help="Enable or disable this mapping."/>
+            </group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_google_chat_mapping" model="ir.actions.act_window">
+      <field name="name">Google Chat Mapping</field>
+      <field name="res_model">google.chat.mapping</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+
+  <menuitem id="menu_google_chat_mapping" name="Notification Mapping" parent="menu_google_chat_root" action="action_google_chat_mapping"/>
+</odoo>
