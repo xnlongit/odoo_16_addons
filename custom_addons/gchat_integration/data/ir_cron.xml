@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Cron job to check expiring subscriptions -->
+        <record id="ir_cron_check_expiring_subscriptions" model="ir.cron">
+            <field name="name">Google Chat: Check Expiring Subscriptions</field>
+            <field name="model_id" ref="model_gchat_subscription"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_check_expiring_subscriptions()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="active" eval="True"/>
+        </record>
+        
+        <!-- Cron job to cleanup expired subscriptions -->
+        <record id="ir_cron_cleanup_expired_subscriptions" model="ir.cron">
+            <field name="name">Google Chat: Cleanup Expired Subscriptions</field>
+            <field name="model_id" ref="model_gchat_subscription"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_cleanup_expired_subscriptions()</field>
+            <field name="interval_number">7</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="active" eval="True"/>
+        </record>
+        
+    </data>
+</odoo> 

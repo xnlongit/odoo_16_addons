@@ -1,0 +1,16 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_gchat_config_manager,gchat.config.manager,model_gchat_config,group_gchat_manager,1,1,1,1
+access_gchat_config_user,gchat.config.user,model_gchat_config,group_gchat_user,1,0,0,0
+access_gchat_space_manager,gchat.space.manager,model_gchat_space,group_gchat_manager,1,1,1,1
+access_gchat_space_user,gchat.space.user,model_gchat_space,group_gchat_user,1,1,1,0
+access_gchat_thread_manager,gchat.thread.manager,model_gchat_thread,group_gchat_manager,1,1,1,1
+access_gchat_thread_user,gchat.thread.user,model_gchat_thread,group_gchat_user,1,1,1,0
+access_gchat_subscription_manager,gchat.subscription.manager,model_gchat_subscription,group_gchat_manager,1,1,1,1
+access_gchat_subscription_user,gchat.subscription.user,model_gchat_subscription,group_gchat_user,1,0,0,0
+access_gchat_member_manager,gchat.member.manager,model_gchat_member,group_gchat_manager,1,1,1,1
+access_gchat_member_user,gchat.member.user,model_gchat_member,group_gchat_user,1,1,1,0
+access_gchat_event_log_manager,gchat.event.log.manager,model_gchat_event_log,group_gchat_manager,1,1,1,1
+access_gchat_event_log_user,gchat.event.log.user,model_gchat_event_log,group_gchat_user,1,0,0,0
+access_gchat_space_create_wizard_user,gchat.space.create.wizard.user,model_gchat_space_create_wizard,group_gchat_user,1,1,1,0
+access_gchat_space_link_wizard_user,gchat.space.link.wizard.user,model_gchat_space_link_wizard,group_gchat_user,1,1,1,0
+access_gchat_message_wizard_user,gchat.message.wizard.user,model_gchat_message_wizard,group_gchat_user,1,1,1,0 

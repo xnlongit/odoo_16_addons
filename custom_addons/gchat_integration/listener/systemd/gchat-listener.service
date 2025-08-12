@@ -1,0 +1,30 @@
+[Unit]
+Description=Google Chat Pub/Sub Listener for Odoo
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=odoo
+Group=odoo
+WorkingDirectory=/opt/odoo/custom_addons/gchat_integration/listener
+ExecStart=/usr/bin/python3 /opt/odoo/custom_addons/gchat_integration/listener/listener.py \
+    --gcp-project YOUR_GCP_PROJECT_ID \
+    --subscription YOUR_SUBSCRIPTION_NAME \
+    --sa-json /path/to/service-account.json \
+    --odoo-url https://your-odoo.com \
+    --token YOUR_WEBHOOK_TOKEN \
+    --timeout 30 \
+    --max-messages 50 \
+    --log-level INFO
+
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Environment variables
+Environment=PYTHONPATH=/opt/odoo/custom_addons/gchat_integration/listener
+
+[Install]
+WantedBy=multi-user.target 

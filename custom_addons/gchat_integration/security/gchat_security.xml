@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        
+        <!-- Google Chat Manager Group -->
+        <record id="group_gchat_manager" model="res.groups">
+            <field name="name">Google Chat Manager</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Users with full access to Google Chat integration configuration and management.</field>
+        </record>
+        
+        <!-- Google Chat User Group -->
+        <record id="group_gchat_user" model="res.groups">
+            <field name="name">Google Chat User</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Users who can use Google Chat integration features.</field>
+        </record>
+        
+        <!-- Multi-company rules -->
+        <record id="gchat_config_company_rule" model="ir.rule">
+            <field name="name">Google Chat Config: Multi-Company Rule</field>
+            <field name="model_id" ref="model_gchat_config"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_gchat_manager'))]"/>
+        </record>
+        
+        <record id="gchat_space_company_rule" model="ir.rule">
+            <field name="name">Google Chat Space: Multi-Company Rule</field>
+            <field name="model_id" ref="model_gchat_space"/>
+            <field name="domain_force">[('project_id.company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_gchat_user'))]"/>
+        </record>
+        
+        <record id="gchat_thread_company_rule" model="ir.rule">
+            <field name="name">Google Chat Thread: Multi-Company Rule</field>
+            <field name="model_id" ref="model_gchat_thread"/>
+            <field name="domain_force">[('task_id.project_id.company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_gchat_user'))]"/>
+        </record>
+        
+        <record id="gchat_subscription_company_rule" model="ir.rule">
+            <field name="name">Google Chat Subscription: Multi-Company Rule</field>
+            <field name="model_id" ref="model_gchat_subscription"/>
+            <field name="domain_force">[('config_id.company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_gchat_manager'))]"/>
+        </record>
+        
+        <record id="gchat_member_company_rule" model="ir.rule">
+            <field name="name">Google Chat Member: Multi-Company Rule</field>
+            <field name="model_id" ref="model_gchat_member"/>
+            <field name="domain_force">[('space_id.project_id.company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_gchat_user'))]"/>
+        </record>
+        
+        <record id="gchat_event_log_company_rule" model="ir.rule">
+            <field name="name">Google Chat Event Log: Multi-Company Rule</field>
+            <field name="model_id" ref="model_gchat_event_log"/>
+            <field name="domain_force">[('space_id.project_id.company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('group_gchat_manager'))]"/>
+        </record>
+        
+    </data>
+</odoo> 

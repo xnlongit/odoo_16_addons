@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Main Google Chat Menu -->
+        <menuitem id="menu_gchat_root"
+                  name="Google Chat"
+                  web_icon="gchat_integration,static/description/icon.png"
+                  sequence="50"/>
+        
+        <!-- Configuration Menu -->
+        <menuitem id="menu_gchat_config"
+                  name="Configuration"
+                  parent="menu_gchat_root"
+                  sequence="10"/>
+        
+        <!-- Connections Menu -->
+        <menuitem id="menu_gchat_connections"
+                  name="Connections"
+                  parent="menu_gchat_config"
+                  sequence="10"/>
+        
+        <!-- Spaces Menu -->
+        <menuitem id="menu_gchat_spaces"
+                  name="Spaces"
+                  parent="menu_gchat_root"
+                  sequence="20"/>
+        
+        <!-- Threads Menu -->
+        <menuitem id="menu_gchat_threads"
+                  name="Threads"
+                  parent="menu_gchat_root"
+                  sequence="30"/>
+        
+        <!-- Subscriptions Menu -->
+        <menuitem id="menu_gchat_subscriptions"
+                  name="Subscriptions"
+                  parent="menu_gchat_config"
+                  sequence="20"/>
+        
+        <!-- Members Menu -->
+        <menuitem id="menu_gchat_members"
+                  name="Members"
+                  parent="menu_gchat_root"
+                  sequence="40"/>
+        
+        <!-- Events Log Menu -->
+        <menuitem id="menu_gchat_events"
+                  name="Events Log"
+                  parent="menu_gchat_config"
+                  sequence="30"/>
+        
+    </data>
+</odoo> 

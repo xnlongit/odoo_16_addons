@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Google Chat Subscription Tree View -->
+        <record id="view_gchat_subscription_tree" model="ir.ui.view">
+            <field name="name">gchat.subscription.tree</field>
+            <field name="model">gchat.subscription</field>
+            <field name="arch" type="xml">
+                <tree string="Google Chat Subscriptions">
+                    <field name="subscription_name"/>
+                    <field name="config_id"/>
+                    <field name="space_id"/>
+                    <field name="topic"/>
+                    <field name="mode"/>
+                    <field name="status"/>
+                    <field name="expires_at"/>
+                    <field name="last_message_time"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Google Chat Subscription Form View -->
+        <record id="view_gchat_subscription_form" model="ir.ui.view">
+            <field name="name">gchat.subscription.form</field>
+            <field name="model">gchat.subscription</field>
+            <field name="arch" type="xml">
+                <form string="Google Chat Subscription">
+                    <header>
+                        <button name="action_create" 
+                                string="Create on GCP" 
+                                type="object" 
+                                class="btn-primary"
+                                attrs="{'invisible': [('status', '=', 'active')]}"/>
+                        <button name="action_renew" 
+                                string="Renew" 
+                                type="object" 
+                                class="btn-warning"
+                                attrs="{'invisible': [('status', '!=', 'active')]}"/>
+                        <button name="action_delete" 
+                                string="Delete" 
+                                type="object" 
+                                class="btn-danger"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="subscription_name" placeholder="Subscription Name"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="config_id"/>
+                                <field name="space_id"/>
+                                <field name="topic"/>
+                            </group>
+                            <group>
+                                <field name="mode"/>
+                                <field name="status"/>
+                                <field name="expires_at"/>
+                                <field name="last_message_time" readonly="1"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Push Configuration" name="push" attrs="{'invisible': [('mode', '!=', 'push')]}">
+                                <group>
+                                    <field name="push_endpoint"/>
+                                    <field name="push_attributes" widget="text"/>
+                                </group>
+                            </page>
+                            
+                            <page string="Error Information" name="error" attrs="{'invisible': [('status', '!=', 'error')]}">
+                                <group>
+                                    <field name="error_message" readonly="1"/>
+                                    <field name="retry_count"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Google Chat Subscription Action -->
+        <record id="action_gchat_subscription" model="ir.actions.act_window">
+            <field name="name">Subscriptions</field>
+            <field name="res_model">gchat.subscription</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first Google Chat subscription
+                </p>
+                <p>
+                    Manage Pub/Sub subscriptions for real-time Google Chat event processing.
+                </p>
+            </field>
+        </record>
+        
+        <!-- Menu Item -->
+        <menuitem id="menu_gchat_subscription_list"
+                  name="Subscriptions"
+                  parent="menu_gchat_subscriptions"
+                  action="action_gchat_subscription"
+                  sequence="10"/>
+        
+    </data>
+</odoo> 

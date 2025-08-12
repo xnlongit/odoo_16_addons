@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Google Chat Space Tree View -->
+        <record id="view_gchat_space_tree" model="ir.ui.view">
+            <field name="name">gchat.space.tree</field>
+            <field name="model">gchat.space</field>
+            <field name="arch" type="xml">
+                <tree string="Google Chat Spaces">
+                    <field name="display_name"/>
+                    <field name="project_id"/>
+                    <field name="space_id"/>
+                    <field name="space_type"/>
+                    <field name="config_id"/>
+                    <field name="sync_status"/>
+                    <field name="last_sync"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Google Chat Space Form View -->
+        <record id="view_gchat_space_form" model="ir.ui.view">
+            <field name="name">gchat.space.form</field>
+            <field name="model">gchat.space</field>
+            <field name="arch" type="xml">
+                <form string="Google Chat Space">
+                    <header>
+                        <button name="action_create_space" 
+                                string="Create Space" 
+                                type="object" 
+                                class="btn-primary"
+                                attrs="{'invisible': [('space_id', '!=', False)]}"/>
+                        <button name="action_link_space" 
+                                string="Link Space" 
+                                type="object" 
+                                class="btn-secondary"
+                                attrs="{'invisible': [('space_id', '!=', False)]}"/>
+                        <button name="action_view_threads" 
+                                string="View Threads" 
+                                type="object" 
+                                class="btn-info"
+                                attrs="{'invisible': [('space_id', '=', False)]}"/>
+                        <button name="sync_members" 
+                                string="Sync Members" 
+                                type="object" 
+                                class="btn-warning"
+                                attrs="{'invisible': [('space_id', '=', False)]}"/>
+                        <field name="active" widget="boolean_toggle"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="display_name" readonly="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="project_id"/>
+                                <field name="space_id"/>
+                                <field name="space_display_name"/>
+                            </group>
+                            <group>
+                                <field name="space_type"/>
+                                <field name="config_id"/>
+                                <field name="sync_status"/>
+                                <field name="last_sync" readonly="1"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Subscription" name="subscription">
+                                <group>
+                                    <field name="subscription_id"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Google Chat Space Search View -->
+        <record id="view_gchat_space_search" model="ir.ui.view">
+            <field name="name">gchat.space.search</field>
+            <field name="model">gchat.space</field>
+            <field name="arch" type="xml">
+                <search string="Search Google Chat Spaces">
+                    <field name="display_name"/>
+                    <field name="project_id"/>
+                    <field name="space_id"/>
+                    <field name="config_id"/>
+                    <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Project" name="project" context="{'group_by': 'project_id'}"/>
+                        <filter string="Space Type" name="space_type" context="{'group_by': 'space_type'}"/>
+                        <filter string="Config" name="config" context="{'group_by': 'config_id'}"/>
+                        <filter string="Status" name="status" context="{'group_by': 'sync_status'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Google Chat Space Action -->
+        <record id="action_gchat_space" model="ir.actions.act_window">
+            <field name="name">Spaces</field>
+            <field name="res_model">gchat.space</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{'search_default_active': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first Google Chat space
+                </p>
+                <p>
+                    Link your projects to Google Chat spaces for seamless integration.
+                </p>
+            </field>
+        </record>
+        
+        <!-- Menu Item -->
+        <menuitem id="menu_gchat_space_list"
+                  name="Spaces"
+                  parent="menu_gchat_spaces"
+                  action="action_gchat_space"
+                  sequence="10"/>
+        
+    </data>
+</odoo> 

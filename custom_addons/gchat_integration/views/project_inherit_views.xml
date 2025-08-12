@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Project Form View Inheritance -->
+        <record id="view_project_form_inherit_gchat" model="ir.ui.view">
+            <field name="name">project.project.form.inherit.gchat</field>
+            <field name="model">project.project</field>
+            <field name="inherit_id" ref="project.edit_project"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <button name="action_sync_with_gchat" 
+                            string="Sync with Google Chat" 
+                            type="object" 
+                            class="btn-primary"
+                            attrs="{'invisible': [('gchat_sync_enabled', '=', True)]}"/>
+                    <button name="action_view_gchat_space" 
+                            string="View Google Chat Space" 
+                            type="object" 
+                            class="btn-info"
+                            attrs="{'invisible': [('has_gchat_space', '=', False)]}"/>
+                    <button name="action_view_gchat_threads" 
+                            string="View Threads" 
+                            type="object" 
+                            class="btn-secondary"
+                            attrs="{'invisible': [('has_gchat_space', '=', False)]}"/>
+                </xpath>
+                
+                <xpath expr="//sheet/group" position="after">
+                    <group string="Google Chat Integration" attrs="{'invisible': [('gchat_sync_enabled', '=', False)]}">
+                        <group>
+                            <field name="gchat_sync_enabled" invisible="1"/>
+                            <field name="has_gchat_space" invisible="1"/>
+                            <field name="gchat_space_name" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="gchat_space_id" invisible="1"/>
+                        </group>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+        
+        <!-- Project Tree View Inheritance -->
+        <record id="view_project_tree_inherit_gchat" model="ir.ui.view">
+            <field name="name">project.project.tree.inherit.gchat</field>
+            <field name="model">project.project</field>
+            <field name="inherit_id" ref="project.view_project"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree" position="inside">
+                    <field name="gchat_sync_enabled" optional="show"/>
+                    <field name="gchat_space_name" optional="show"/>
+                </xpath>
+            </field>
+        </record>
+        
+        <!-- Project Task Form View Inheritance -->
+        <record id="view_project_task_form_inherit_gchat" model="ir.ui.view">
+            <field name="name">project.task.form.inherit.gchat</field>
+            <field name="model">project.task</field>
+            <field name="inherit_id" ref="project.view_task_form2"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <button name="action_create_gchat_thread" 
+                            string="Create Google Chat Thread" 
+                            type="object" 
+                            class="btn-primary"
+                            attrs="{'invisible': [('has_gchat_thread', '=', True)]}"/>
+                    <button name="action_view_gchat_thread" 
+                            string="View Google Chat Thread" 
+                            type="object" 
+                            class="btn-info"
+                            attrs="{'invisible': [('has_gchat_thread', '=', False)]}"/>
+                    <button name="action_send_gchat_message" 
+                            string="Send Message" 
+                            type="object" 
+                            class="btn-secondary"
+                            attrs="{'invisible': [('has_gchat_thread', '=', False)]}"/>
+                    <button name="action_sync_gchat_thread" 
+                            string="Sync Thread" 
+                            type="object" 
+                            class="btn-warning"
+                            attrs="{'invisible': [('has_gchat_thread', '=', False)]}"/>
+                </xpath>
+                
+                <xpath expr="//sheet/group" position="after">
+                    <group string="Google Chat Integration" attrs="{'invisible': [('has_gchat_thread', '=', False)]}">
+                        <group>
+                            <field name="has_gchat_thread" invisible="1"/>
+                            <field name="gchat_thread_key" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="gchat_thread_id" invisible="1"/>
+                        </group>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+        
+        <!-- Project Task Tree View Inheritance -->
+        <record id="view_project_task_tree_inherit_gchat" model="ir.ui.view">
+            <field name="name">project.task.tree.inherit.gchat</field>
+            <field name="model">project.task</field>
+            <field name="inherit_id" ref="project.view_task_tree2"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree" position="inside">
+                    <field name="has_gchat_thread" optional="show"/>
+                    <field name="gchat_thread_key" optional="show"/>
+                </xpath>
+            </field>
+        </record>
+        
+    </data>
+</odoo> 
