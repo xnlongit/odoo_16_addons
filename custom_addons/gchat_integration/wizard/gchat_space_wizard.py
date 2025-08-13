@@ -78,6 +78,10 @@ class GchatSpaceLinkWizard(models.TransientModel):
     space_id_input = fields.Char('Google Chat Space ID', 
                                 help='Enter the Google Chat space ID (e.g., spaces/1234567890)')
     
+    # New field for available spaces
+    available_spaces = fields.Text('Available Spaces', readonly=True, 
+                                  help='List of available Google Chat spaces')
+    
     @api.model
     def default_get(self, fields_list):
         """Set default values."""
@@ -89,7 +93,52 @@ class GchatSpaceLinkWizard(models.TransientModel):
             space = self.env['gchat.space'].browse(self.env.context['default_space_id'])
             res['space_id'] = space.id
             res['space_name'] = space.space_display_name
+        
+        # Load available spaces
+        res['available_spaces'] = self._get_available_spaces()
         return res
+
+    def _get_available_spaces(self):
+        """Get list of available Google Chat spaces."""
+        try:
+            config = self.env['gchat.config'].search([
+                ('company_id', '=', self.project_id.company_id.id),
+                ('is_active', '=', True)
+            ], limit=1)
+            
+            if not config:
+                return "No active Google Chat configuration found."
+            
+            if not config.access_token:
+                return "Please authenticate with Google first (Get OAuth Token)."
+            
+            spaces = config.list_spaces()
+            
+            if not spaces:
+                return "No spaces found. You may need to create spaces in Google Chat first."
+            
+            space_list = []
+            for space in spaces:
+                space_list.append(f"• {space.get('displayName', 'Unknown')} ({space.get('name', 'Unknown')})")
+            
+            return "Available Spaces:\n" + "\n".join(space_list)
+            
+        except Exception as e:
+            return f"Error loading spaces: {str(e)}"
+
+    def action_refresh_spaces(self):
+        """Refresh the list of available spaces."""
+        self.ensure_one()
+        self.available_spaces = self._get_available_spaces()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Success'),
+                'message': _('Spaces list refreshed'),
+                'type': 'success',
+            }
+        }
 
     def action_link_space(self):
         """Link project to Google Chat space."""

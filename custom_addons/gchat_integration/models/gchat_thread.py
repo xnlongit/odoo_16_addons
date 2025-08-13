@@ -110,13 +110,14 @@ class GchatThread(models.Model):
             response = config.send_chat(
                 space_id=self.space_id.space_id,
                 text=message_text,
-                thread_key=self.thread_key
+                thread_key=self.thread_key if config.auth_mode == 'service_account' else None
             )
             
             # Update last message info
             if response.get('success'):
                 self.last_message_id = response.get('message_id')
                 self.message_count += 1
+                self.last_event_ts = fields.Datetime.now()
                 
             return response
             

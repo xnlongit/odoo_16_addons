@@ -4,6 +4,8 @@ from odoo.exceptions import UserError, ValidationError
 import json
 import base64
 import logging
+import urllib.parse
+import requests
 
 _logger = logging.getLogger(__name__)
 
@@ -22,7 +24,7 @@ class GchatConfig(models.Model):
     auth_mode = fields.Selection([
         ('service_account', 'Service Account'),
         ('oauth', 'OAuth 2.0')
-    ], string='Authentication Mode', required=True, default='service_account')
+    ], string='Authentication Mode', required=True, default='oauth')
     
     # Service Account fields
     sa_json = fields.Binary('Service Account JSON', attachment=True)
@@ -37,8 +39,8 @@ class GchatConfig(models.Model):
     
     # API Configuration
     scopes = fields.Text('Scopes', default='https://www.googleapis.com/auth/chat.messages')
-    webhook_token = fields.Char('Webhook Token', required=True, 
-                               help='Token for webhook authentication')
+    webhook_token = fields.Char('Webhook Token', 
+                               help='Token for webhook authentication (optional for OAuth mode)')
     
     # Status fields
     last_sync = fields.Datetime('Last Sync')
@@ -95,21 +97,170 @@ class GchatConfig(models.Model):
         Returns:
             dict: API response
         """
-        # TODO: Implement Google Chat API call
-        # - Use get_client() to get authenticated client
-        # - Call Chat API with proper message format
-        # - Handle errors and retries
-        _logger.info(f"Sending message to space {space_id}, thread {thread_key}")
+        self.ensure_one()
         
-        message_data = {
-            'space_id': space_id,
-            'text': text,
-            'cards': cards,
-            'thread_key': thread_key
+        if not self.access_token:
+            raise UserError(_('Access token not found. Please authenticate with Google first.'))
+        
+        # Refresh token if needed
+        self.refresh_if_needed()
+        
+        # Prepare message data
+        message_data = {}
+        
+        if text:
+            message_data['text'] = text
+        
+        if cards:
+            message_data['cards'] = cards
+        
+        # Add thread key only for service account (not for OAuth user)
+        if thread_key and self.auth_mode == 'service_account':
+            message_data['threadKey'] = thread_key
+        
+        if not message_data:
+            raise UserError(_('Message must contain either text or cards.'))
+        
+        # Prepare headers
+        headers = {
+            'Authorization': f'Bearer {self.access_token}',
+            'Content-Type': 'application/json'
         }
         
-        # Mock implementation
-        return {'success': True, 'message_id': 'mock_123'}
+        # Send message
+        url = f'https://chat.googleapis.com/v1/spaces/{space_id}/messages'
+        
+        try:
+            response = requests.post(url, headers=headers, json=message_data, timeout=30)
+            response.raise_for_status()
+            
+            result = response.json()
+            _logger.info(f"Message sent successfully to space {space_id}: {result.get('name', 'Unknown')}")
+            
+            return {
+                'success': True,
+                'message_id': result.get('name', ''),
+                'response': result
+            }
+            
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Failed to send message to Google Chat: {str(e)}"
+            if hasattr(e, 'response') and e.response:
+                try:
+                    error_detail = e.response.json()
+                    error_msg += f" - {error_detail.get('error', {}).get('message', 'Unknown error')}"
+                except:
+                    error_msg += f" - Status: {e.response.status_code}"
+            
+            _logger.error(error_msg)
+            raise UserError(error_msg)
+
+    def list_spaces(self):
+        """
+        List available Google Chat spaces.
+        
+        Returns:
+            list: List of space information
+        """
+        self.ensure_one()
+        
+        if not self.access_token:
+            raise UserError(_('Access token not found. Please authenticate with Google first.'))
+        
+        # Refresh token if needed
+        self.refresh_if_needed()
+        
+        headers = {
+            'Authorization': f'Bearer {self.access_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        url = 'https://chat.googleapis.com/v1/spaces'
+        
+        try:
+            response = requests.get(url, headers=headers, timeout=30)
+            response.raise_for_status()
+            
+            result = response.json()
+            spaces = result.get('spaces', [])
+            
+            _logger.info(f"Retrieved {len(spaces)} spaces from Google Chat")
+            
+            return spaces
+            
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Failed to list Google Chat spaces: {str(e)}"
+            if hasattr(e, 'response') and e.response:
+                try:
+                    error_detail = e.response.json()
+                    error_msg += f" - {error_detail.get('error', {}).get('message', 'Unknown error')}"
+                except:
+                    error_msg += f" - Status: {e.response.status_code}"
+            
+            _logger.error(error_msg)
+            raise UserError(error_msg)
+
+    def create_space(self, display_name, description=None):
+        """
+        Create a new Google Chat space.
+        
+        Args:
+            display_name (str): Space display name
+            description (str): Space description
+            
+        Returns:
+            dict: Created space information
+        """
+        self.ensure_one()
+        
+        if not self.access_token:
+            raise UserError(_('Access token not found. Please authenticate with Google first.'))
+        
+        # Refresh token if needed
+        self.refresh_if_needed()
+        
+        # Prepare space data
+        space_data = {
+            'displayName': display_name,
+            'type': 'ROOM'
+        }
+        
+        if description:
+            space_data['description'] = description
+        
+        headers = {
+            'Authorization': f'Bearer {self.access_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        url = 'https://chat.googleapis.com/v1/spaces'
+        
+        try:
+            response = requests.post(url, headers=headers, json=space_data, timeout=30)
+            response.raise_for_status()
+            
+            result = response.json()
+            _logger.info(f"Space created successfully: {result.get('name', 'Unknown')}")
+            
+            return {
+                'success': True,
+                'space_id': result.get('name', ''),
+                'display_name': result.get('displayName', ''),
+                'type': result.get('type', ''),
+                'response': result
+            }
+            
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Failed to create Google Chat space: {str(e)}"
+            if hasattr(e, 'response') and e.response:
+                try:
+                    error_detail = e.response.json()
+                    error_msg += f" - {error_detail.get('error', {}).get('message', 'Unknown error')}"
+                except:
+                    error_msg += f" - Status: {e.response.status_code}"
+            
+            _logger.error(error_msg)
+            raise UserError(error_msg)
 
     def refresh_if_needed(self):
         """Refresh OAuth token if expired."""
@@ -121,25 +272,76 @@ class GchatConfig(models.Model):
     def action_test_connection(self):
         """Test Google Chat connection."""
         try:
-            # TODO: Implement connection test
-            # - Try to list spaces or send test message
-            _logger.info(f"Testing connection for config {self.name}")
+            # Test by listing spaces
+            spaces = self.list_spaces()
+            
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
                     'title': _('Success'),
-                    'message': _('Connection test successful'),
+                    'message': _('Connection test successful. Found %d spaces.') % len(spaces),
                     'type': 'success',
                 }
             }
         except Exception as e:
             raise UserError(_('Connection test failed: %s') % str(e))
 
+    def action_list_spaces(self):
+        """List available Google Chat spaces."""
+        try:
+            spaces = self.list_spaces()
+            
+            # Create a simple list for display
+            space_list = []
+            for space in spaces:
+                space_list.append({
+                    'name': space.get('displayName', 'Unknown'),
+                    'space_id': space.get('name', ''),
+                    'type': space.get('type', ''),
+                    'description': space.get('description', '')
+                })
+            
+            # Return as notification with space count
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Available Spaces'),
+                    'message': _('Found %d spaces. Check logs for details.') % len(spaces),
+                    'type': 'info',
+                }
+            }
+            
+        except Exception as e:
+            raise UserError(_('Failed to list spaces: %s') % str(e))
+
     def action_get_oauth_token(self):
         """Open OAuth flow to get tokens."""
-        # TODO: Implement OAuth flow
-        # - Redirect to Google OAuth
-        # - Handle callback and store tokens
-        _logger.info(f"Starting OAuth flow for config {self.name}")
-        pass 
+        self.ensure_one()
+        
+        if not self.oauth_client_id:
+            raise UserError(_('OAuth Client ID is required. Please configure it first.'))
+        
+        # Lấy base URL của Odoo
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        redirect_uri = base_url.rstrip('/') + '/gchat/oauth/callback'
+        
+        # Tạo OAuth URL
+        oauth_params = {
+            'client_id': self.oauth_client_id,
+            'redirect_uri': redirect_uri,
+            'response_type': 'code',
+            'scope': self.scopes or 'https://www.googleapis.com/auth/chat.messages',
+            'access_type': 'offline',
+            'prompt': 'consent',
+            'state': f'config_{self.id}'
+        }
+        
+        oauth_url = 'https://accounts.google.com/o/oauth2/v2/auth?' + urllib.parse.urlencode(oauth_params)
+        
+        return {
+            'type': 'ir.actions.act_url',
+            'url': oauth_url,
+            'target': 'self',
+        } 

@@ -5,7 +5,6 @@
         <!-- Main Google Chat Menu -->
         <menuitem id="menu_gchat_root"
                   name="Google Chat"
-                  web_icon="gchat_integration,static/description/icon.png"
                   sequence="50"/>
         
         <!-- Configuration Menu -->

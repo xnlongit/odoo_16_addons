@@ -39,6 +39,15 @@
                         <field name="space_id_input" 
                                attrs="{'invisible': [('space_id', '!=', False)]}"/>
                     </group>
+                    
+                    <group string="Available Spaces">
+                        <field name="available_spaces" widget="text"/>
+                        <button name="action_refresh_spaces" 
+                                string="Refresh Spaces" 
+                                type="object" 
+                                class="btn-secondary"/>
+                    </group>
+                    
                     <footer>
                         <button name="action_link_space" 
                                 string="Link Space" 

@@ -4,7 +4,11 @@ from odoo.http import request
 import json
 import base64
 import logging
+import urllib.parse
+import requests
 from werkzeug.exceptions import Unauthorized, BadRequest
+from odoo import fields
+from datetime import timedelta
 
 _logger = logging.getLogger(__name__)
 
@@ -104,6 +108,110 @@ class GchatWebhookController(http.Controller):
         except Exception as e:
             _logger.error(f"Unexpected error in webhook: {str(e)}")
             return "INTERNAL_ERROR", 500
+
+    @http.route('/gchat/oauth/callback', auth='public', type='http', methods=['GET'])
+    def gchat_oauth_callback(self, **kwargs):
+        """
+        OAuth callback endpoint for Google Chat authentication.
+        """
+        try:
+            code = kwargs.get('code')
+            state = kwargs.get('state')
+            error = kwargs.get('error')
+            
+            if error:
+                return f"""
+                <html>
+                <body>
+                    <h2>Lỗi xác thực Google</h2>
+                    <p>Lỗi: {error}</p>
+                    <p><a href="/web">Quay lại Odoo</a></p>
+                </body>
+                </html>
+                """
+            
+            if not code:
+                return """
+                <html>
+                <body>
+                    <h2>Lỗi xác thực</h2>
+                    <p>Không nhận được mã xác thực từ Google.</p>
+                    <p><a href="/web">Quay lại Odoo</a></p>
+                </body>
+                </html>
+                """
+            
+            # Tìm config để lưu token
+            config = request.env['gchat.config'].sudo().search([
+                ('is_active', '=', True)
+            ], limit=1)
+            
+            if not config:
+                return """
+                <html>
+                <body>
+                    <h2>Lỗi cấu hình</h2>
+                    <p>Không tìm thấy cấu hình Google Chat.</p>
+                    <p><a href="/web">Quay lại Odoo</a></p>
+                </body>
+                </html>
+                """
+            
+            # Lấy redirect URI
+            base_url = request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+            redirect_uri = base_url.rstrip('/') + '/gchat/oauth/callback'
+            
+            # Đổi code lấy token
+            token_data = {
+                'code': code,
+                'client_id': config.oauth_client_id,
+                'client_secret': config.oauth_client_secret,
+                'redirect_uri': redirect_uri,
+                'grant_type': 'authorization_code'
+            }
+            
+            token_response = requests.post('https://oauth2.googleapis.com/token', data=token_data)
+            token_info = token_response.json()
+            
+            if 'error' in token_info:
+                return f"""
+                <html>
+                <body>
+                    <h2>Lỗi lấy token</h2>
+                    <p>Lỗi: {token_info.get('error_description', token_info.get('error'))}</p>
+                    <p><a href="/web">Quay lại Odoo</a></p>
+                </body>
+                </html>
+                """
+            
+            # Lưu token vào config
+            config.write({
+                'access_token': token_info.get('access_token'),
+                'refresh_token': token_info.get('refresh_token'),
+                'token_expiry': fields.Datetime.now() + timedelta(seconds=token_info.get('expires_in', 3600))
+            })
+            
+            return """
+            <html>
+            <body>
+                <h2>Xác thực thành công!</h2>
+                <p>Đã lưu token Google Chat thành công.</p>
+                <p><a href="/web">Quay lại Odoo</a></p>
+            </body>
+            </html>
+            """
+            
+        except Exception as e:
+            _logger.error(f"OAuth callback error: {str(e)}")
+            return f"""
+            <html>
+            <body>
+                <h2>Lỗi xử lý</h2>
+                <p>Lỗi: {str(e)}</p>
+                <p><a href="/web">Quay lại Odoo</a></p>
+            </body>
+            </html>
+            """
 
     @http.route('/gchat/webhook/health', auth='none', type='http', methods=['GET'])
     def webhook_health(self, **kwargs):

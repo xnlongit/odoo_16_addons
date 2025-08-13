@@ -2,10 +2,17 @@
 <odoo>
     <data noupdate="0">
         
+        <!-- Category for all groups -->
+        <record id="module_google_chat_category" model="ir.module.category">
+            <field name="name">Google Chat Groups</field>
+            <field name="description">Category for all groups</field>
+            <field name="sequence">20</field>
+        </record>
+        
         <!-- Google Chat Manager Group -->
         <record id="group_gchat_manager" model="res.groups">
             <field name="name">Google Chat Manager</field>
-            <field name="category_id" ref="base.module_category_hidden"/>
+            <field name="category_id" ref="gchat_integration.module_google_chat_category"/>
             <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
             <field name="comment">Users with full access to Google Chat integration configuration and management.</field>
         </record>
@@ -13,7 +20,7 @@
         <!-- Google Chat User Group -->
         <record id="group_gchat_user" model="res.groups">
             <field name="name">Google Chat User</field>
-            <field name="category_id" ref="base.module_category_hidden"/>
+            <field name="category_id" ref="gchat_integration.module_google_chat_category"/>
             <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
             <field name="comment">Users who can use Google Chat integration features.</field>
         </record>

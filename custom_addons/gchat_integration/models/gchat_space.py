@@ -71,31 +71,39 @@ class GchatSpace(models.Model):
         self.ensure_one()
         
         try:
-            # TODO: Implement Google Chat API call to create space
-            # - Use config.get_client() to get authenticated client
-            # - Call Chat API spaces.create
-            # - Update space_id and metadata
-            _logger.info(f"Creating Google Chat space for project {self.project_id.name}")
+            # Get configuration
+            config = self.config_id
+            if not config:
+                raise UserError(_('No Google Chat configuration found for this space.'))
             
-            # Mock implementation
-            mock_space_id = f"spaces/{self.project_id.id}_{self.project_id.name.lower().replace(' ', '_')}"
-            self.write({
-                'space_id': mock_space_id,
-                'space_display_name': self.project_id.name,
-                'space_type': 'ROOM',
-                'sync_status': 'idle'
-            })
+            # Create space on Google Chat
+            space_name = self.space_display_name or self.project_id.name
+            space_description = f"Project: {self.project_id.name}"
             
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'display_notification',
-                'params': {
-                    'title': _('Success'),
-                    'message': _('Google Chat space created successfully'),
-                    'type': 'success',
+            result = config.create_space(space_name, space_description)
+            
+            if result.get('success'):
+                # Update space record with real data
+                self.write({
+                    'space_id': result['space_id'],
+                    'space_display_name': result['display_name'],
+                    'space_type': result['type'],
+                    'sync_status': 'idle',
+                    'last_sync': fields.Datetime.now()
+                })
+                
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': _('Success'),
+                        'message': _('Google Chat space created successfully: %s') % result['space_id'],
+                        'type': 'success',
+                    }
                 }
-            }
-            
+            else:
+                raise UserError(_('Failed to create Google Chat space'))
+                
         except Exception as e:
             self.sync_status = 'error'
             raise UserError(_('Failed to create Google Chat space: %s') % str(e))

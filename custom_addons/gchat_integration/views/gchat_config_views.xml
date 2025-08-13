@@ -30,6 +30,11 @@
                                 type="object" 
                                 class="btn-primary"
                                 attrs="{'invisible': [('id', '=', False)]}"/>
+                        <button name="action_list_spaces" 
+                                string="List Spaces" 
+                                type="object" 
+                                class="btn-info"
+                                attrs="{'invisible': [('id', '=', False)]}"/>
                         <button name="action_get_oauth_token" 
                                 string="Get OAuth Token" 
                                 type="object" 
@@ -58,21 +63,19 @@
                         
                         <notebook>
                             <page string="Authentication" name="auth">
-                                <group>
-                                    <group string="Service Account" attrs="{'invisible': [('auth_mode', '!=', 'service_account')]}">
-                                        <field name="sa_json" filename="sa_json_filename"/>
-                                        <field name="sa_json_filename" invisible="1"/>
-                                    </group>
-                                    <group string="OAuth 2.0" attrs="{'invisible': [('auth_mode', '!=', 'oauth')]}">
-                                        <field name="oauth_client_id"/>
-                                        <field name="oauth_client_secret" password="True"/>
-                                        <field name="refresh_token" password="True"/>
-                                        <field name="access_token" password="True" readonly="1"/>
-                                        <field name="token_expiry" readonly="1"/>
-                                    </group>
+                                <group string="OAuth 2.0" attrs="{'invisible': [('auth_mode', '!=', 'oauth')]}">
+                                    <field name="oauth_client_id"/>
+                                    <field name="oauth_client_secret" password="True"/>
+                                    <field name="refresh_token" password="True"/>
+                                    <field name="access_token" readonly="1" widget="text" style="max-width:500px; overflow:auto;"/>
+                                    <field name="token_expiry" readonly="1"/>
+                                </group>
+                                <group string="Service Account" attrs="{'invisible': [('auth_mode', '!=', 'service_account')]}">
+                                    <field name="sa_json" filename="sa_json_filename"/>
+                                    <field name="sa_json_filename" invisible="1"/>
                                 </group>
                             </page>
-                            
+
                             <page string="API Configuration" name="api">
                                 <group>
                                     <field name="scopes" widget="text"/>
