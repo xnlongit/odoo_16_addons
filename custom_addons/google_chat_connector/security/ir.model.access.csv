@@ -1,5 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_google_chat_config,access_google_chat_config,model_google_chat_config,base.group_system,1,1,1,1
-access_google_chat_log,access_google_chat_log,model_google_chat_log,base.group_system,1,0,0,0
-access_google_chat_mapping,access_google_chat_mapping,model_google_chat_mapping,base.group_system,1,1,1,1
-access_google_chat_test_wizard,access_google_chat_mapping,model_google_chat_mapping,base.group_system,1,1,1,1

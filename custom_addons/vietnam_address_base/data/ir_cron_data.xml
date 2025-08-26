@@ -1,0 +1,12 @@
+<odoo>
+    <!-- Cron job to migrate old provinces to new provinces -->
+    <record id="ir_cron_migrate_vietnam_provinces" model="ir.cron">
+        <field name="name">###Migrate Vietnam Provinces to New Structure</field>
+        <field name="model_id" ref="model_res_country_state" />
+        <field name="state">code</field>
+        <field name="code">model.migrate_old_provinces()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">False</field>
+    </record>
+</odoo>
