@@ -6,6 +6,8 @@ import base64
 import logging
 import urllib.parse
 import requests
+from datetime import timedelta
+from dateutil.relativedelta import relativedelta
 
 _logger = logging.getLogger(__name__)
 
@@ -38,7 +40,7 @@ class GchatConfig(models.Model):
     token_expiry = fields.Datetime('Token Expiry')
     
     # API Configuration
-    scopes = fields.Text('Scopes', default='https://www.googleapis.com/auth/chat.messages')
+    scopes = fields.Text('Scopes', default='https://www.googleapis.com/auth/chat.messages.create https://www.googleapis.com/auth/chat.spaces.readonly')
     webhook_token = fields.Char('Webhook Token', 
                                help='Token for webhook authentication (optional for OAuth mode)')
     
@@ -66,6 +68,217 @@ class GchatConfig(models.Model):
             elif config.auth_mode == 'oauth':
                 if not config.oauth_client_id or not config.oauth_client_secret:
                     raise ValidationError(_('OAuth Client ID and Secret are required for OAuth mode.'))
+
+    def _base_url(self):
+        """Return base URL for Google Chat API."""
+        return "https://chat.googleapis.com/v1"
+
+    def _headers(self):
+        """Return headers for API requests."""
+        return {
+            "Authorization": f"Bearer {self._ensure_access_token()}",
+            "Content-Type": "application/json",
+            "User-Agent": "Odoo-GChat/1.0",
+        }
+
+    def _ensure_access_token(self):
+        """Return valid access_token; refresh if expired (<= 5 min)."""
+        self.ensure_one()
+        if not self.access_token or self._is_expired():
+            self._refresh_token()
+        return self.access_token
+
+    def _is_expired(self):
+        """Check if token is expired (with 5 min safety margin)."""
+        if not self.token_expiry:
+            return True
+        # an toàn: trừ 5 phút
+        return fields.Datetime.now() >= (self.token_expiry - relativedelta(minutes=5))
+
+    def _refresh_token(self):
+        """OAuth refresh_token → access_token."""
+        self.ensure_one()
+        if not self.refresh_token:
+            raise UserError(_('No refresh token available. Please re-authenticate with Google.'))
+        
+        data = {
+            "client_id": self.oauth_client_id,
+            "client_secret": self.oauth_client_secret,
+            "grant_type": "refresh_token",
+            "refresh_token": self.refresh_token,
+        }
+        
+        try:
+            r = requests.post("https://oauth2.googleapis.com/token", data=data, timeout=20)
+            r.raise_for_status()
+            tok = r.json()
+            
+            self.sudo().write({
+                "access_token": tok.get("access_token"),
+                "token_expiry": fields.Datetime.now() + relativedelta(seconds=int(tok.get("expires_in", 3600))),
+            })
+            
+            _logger.info(f"Token refreshed successfully for config {self.name}")
+            
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Failed to refresh token: {str(e)}"
+            if hasattr(e, 'response') and e.response:
+                try:
+                    error_detail = e.response.json()
+                    error_msg += f" - {error_detail.get('error_description', error_detail.get('error', 'Unknown error'))}"
+                except:
+                    error_msg += f" - Status: {e.response.status_code}"
+            
+            _logger.error(error_msg)
+            raise UserError(error_msg)
+
+    def _request(self, method, url, json_payload=None, retry_on_401=True):
+        """Make HTTP request with automatic token refresh on 401."""
+        self.ensure_one()
+        
+        headers = self._headers()
+        
+        try:
+            r = requests.request(method, url, headers=headers, json=json_payload, timeout=30)
+            
+            if r.status_code == 401 and retry_on_401:
+                # refresh & retry once
+                _logger.info(f"Token expired, refreshing and retrying request to {url}")
+                self._refresh_token()
+                headers = self._headers()
+                r = requests.request(method, url, headers=headers, json=json_payload, timeout=30)
+            
+            # raise for non-2xx
+            if r.status_code // 100 != 2:
+                error_msg = f"GChat API {r.status_code}: {r.text[:500]}"
+                _logger.error(f"API request failed: {error_msg}")
+                raise UserError(error_msg)
+            
+            return r.json() if r.text else {}
+            
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Request failed: {str(e)}"
+            _logger.error(error_msg)
+            raise UserError(error_msg)
+
+    def find_or_create_dm(self, user_identifier):
+        """
+        Find or create DM space with user.
+        
+        Args:
+            user_identifier: email 'user@company.com' hoặc 'users/123456789'
+            
+        Returns:
+            str: Space ID in format 'spaces/AAAA...'
+        """
+        self.ensure_one()
+        
+        base = self._base_url()
+        # nếu là email: cần URL-encode. name='users/{email}'
+        from urllib.parse import quote
+        name = f"users/{quote(user_identifier)}" if "@" in user_identifier else user_identifier
+        url = f"{base}/spaces:findDirectMessage?name={name}"
+        
+        try:
+            resp = self._request("GET", url)
+            # resp.name là 'spaces/AAAA...'
+            space_id = resp.get("name")
+            if space_id:
+                _logger.info(f"Found DM space {space_id} for user {user_identifier}")
+                return space_id
+            else:
+                raise UserError(f"Could not find or create DM space for user {user_identifier}")
+                
+        except Exception as e:
+            _logger.error(f"Failed to find/create DM for user {user_identifier}: {str(e)}")
+            raise
+
+    def send_card_dm(self, space_id, *, title, subtitle=None, items=None, button_text=None, button_url=None, thread_key=None):
+        """
+        Send cardsV2 message to DM space.
+        
+        Args:
+            space_id (str): Space ID in format 'spaces/AAAA...'
+            title (str): Card title
+            subtitle (str): Card subtitle (optional)
+            items (list): List of text items to display
+            button_text (str): Button text (optional)
+            button_url (str): Button URL (optional)
+            thread_key (str): Thread key for threading (optional)
+            
+        Returns:
+            dict: API response
+        """
+        self.ensure_one()
+        
+        base = self._base_url()
+        url = f"{base}/{space_id}/messages"
+
+        card_widgets = []
+        
+        # items
+        for it in (items or []):
+            card_widgets.append({"decoratedText": {"text": it}})
+        
+        # button
+        if button_text and button_url:
+            card_widgets.append({
+                "buttonList": {
+                    "buttons": [{
+                        "text": button_text,
+                        "onClick": {"openLink": {"url": button_url}}
+                    }]
+                }
+            })
+
+        card = {
+            "cardId": "odoo_notify",
+            "card": {
+                "header": { 
+                    "title": title, 
+                    **({"subtitle": subtitle} if subtitle else {}) 
+                },
+                "sections": [{ 
+                    "widgets": card_widgets or [{"decoratedText": {"text": " "}}] 
+                }]
+            }
+        }
+
+        body = {
+            "text": title,
+            "cardsV2": [card],
+        }
+        
+        if thread_key:
+            body["thread"] = {"threadKey": str(thread_key)}
+
+        try:
+            resp = self._request("POST", url, json_payload=body)
+            _logger.info(f"Card message sent successfully to {space_id}")
+            return resp
+            
+        except Exception as e:
+            _logger.error(f"Failed to send card message to {space_id}: {str(e)}")
+            raise
+
+    def send_card_to_user(self, user_email, **kwargs):
+        """
+        Send card message to user via DM.
+        
+        Args:
+            user_email (str): User email address
+            **kwargs: Arguments for send_card_dm
+            
+        Returns:
+            dict: API response
+        """
+        self.ensure_one()
+        
+        space_id = self.find_or_create_dm(user_email)
+        if not space_id:
+            raise UserError("Không tìm thấy hoặc tạo được DM space cho user này.")
+        
+        return self.send_card_dm(space_id, **kwargs)
 
     def get_client(self, as_user=None):
         """
@@ -332,7 +545,7 @@ class GchatConfig(models.Model):
             'client_id': self.oauth_client_id,
             'redirect_uri': redirect_uri,
             'response_type': 'code',
-            'scope': self.scopes or 'https://www.googleapis.com/auth/chat.messages',
+            'scope': self.scopes or 'https://www.googleapis.com/auth/chat.messages.create https://www.googleapis.com/auth/chat.spaces.readonly',
             'access_type': 'offline',
             'prompt': 'consent',
             'state': f'config_{self.id}'

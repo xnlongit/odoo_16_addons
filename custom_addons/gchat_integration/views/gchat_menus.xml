@@ -5,6 +5,7 @@
         <!-- Main Google Chat Menu -->
         <menuitem id="menu_gchat_root"
                   name="Google Chat"
+                  web_icon="gchat_integration,static/description/icon.png"
                   sequence="50"/>
         
         <!-- Configuration Menu -->
@@ -48,6 +49,12 @@
                   name="Events Log"
                   parent="menu_gchat_config"
                   sequence="30"/>
+        
+        <!-- Tools Menu -->
+        <menuitem id="menu_gchat_tools"
+                  name="Tools"
+                  parent="menu_gchat_root"
+                  sequence="50"/>
         
     </data>
 </odoo> 

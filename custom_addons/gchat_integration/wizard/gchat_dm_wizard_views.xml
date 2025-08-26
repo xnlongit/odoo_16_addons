@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- DM Wizard Form View -->
+        <record id="view_gchat_dm_wizard_form" model="ir.ui.view">
+            <field name="name">gchat.dm.wizard.form</field>
+            <field name="model">gchat.dm.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Send Google Chat DM">
+                    <group>
+                        <field name="config_id"/>
+                        <field name="user_email" placeholder="user@company.com"/>
+                        <field name="thread_key" placeholder="Optional thread key"/>
+                    </group>
+                    
+                    <group string="Card Content">
+                        <field name="title" placeholder="Card title"/>
+                        <field name="subtitle" placeholder="Card subtitle (optional)"/>
+                        <field name="items" placeholder="One item per line&#10;📋 Item 1&#10;📋 Item 2&#10;📋 Item 3"/>
+                    </group>
+                    
+                    <group string="Button (Optional)">
+                        <field name="button_text" placeholder="Button text"/>
+                        <field name="button_url" placeholder="https://..."/>
+                    </group>
+                    
+                    <footer>
+                        <button name="action_test_dm" 
+                                string="Send Test DM" 
+                                type="object" 
+                                class="btn-secondary"/>
+                        <button name="action_send_dm" 
+                                string="Send DM" 
+                                type="object" 
+                                class="btn-primary"/>
+                        <button string="Cancel" 
+                                class="btn-secondary" 
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+    </data>
+</odoo> 

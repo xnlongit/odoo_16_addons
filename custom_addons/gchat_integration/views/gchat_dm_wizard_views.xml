@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- DM Wizard Form View -->
+        <record id="view_gchat_dm_wizard_form" model="ir.ui.view">
+            <field name="name">gchat.dm.wizard.form</field>
+            <field name="model">gchat.dm.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Send Google Chat DM">
+                    <group>
+                        <field name="config_id"/>
+                        <field name="user_email" placeholder="user@company.com"/>
+                        <field name="thread_key" placeholder="Optional thread key"/>
+                    </group>
+                    
+                    <group string="Card Content">
+                        <field name="title" placeholder="Card title"/>
+                        <field name="subtitle" placeholder="Card subtitle (optional)"/>
+                        <field name="items" placeholder="One item per line&#10;📋 Item 1&#10;📋 Item 2&#10;📋 Item 3"/>
+                    </group>
+                    
+                    <group string="Button (Optional)">
+                        <field name="button_text" placeholder="Button text"/>
+                        <field name="button_url" placeholder="https://..."/>
+                    </group>
+                    
+                    <footer>
+                        <button name="action_test_dm" 
+                                string="Send Test DM" 
+                                type="object" 
+                                class="btn-secondary"/>
+                        <button name="action_send_dm" 
+                                string="Send DM" 
+                                type="object" 
+                                class="btn-primary"/>
+                        <button string="Cancel" 
+                                class="btn-secondary" 
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+        <!-- DM Wizard Action -->
+        <record id="action_gchat_dm_wizard" model="ir.actions.act_window">
+            <field name="name">Send DM</field>
+            <field name="res_model">gchat.dm.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Send a direct message to a user
+                </p>
+                <p>
+                    Configure the message content and send it as a card to a specific user.
+                </p>
+            </field>
+        </record>
+        
+        <!-- Menu Item -->
+        <menuitem id="menu_gchat_send_dm"
+                  name="Send DM"
+                  parent="menu_gchat_tools"
+                  action="action_gchat_dm_wizard"
+                  sequence="10"/>
+        
+    </data>
+</odoo> 

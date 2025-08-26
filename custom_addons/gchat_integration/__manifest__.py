@@ -34,6 +34,7 @@
         'views/gchat_event_log_views.xml',
         'views/project_inherit_views.xml',
         'wizard/gchat_space_wizard_views.xml',
+        'wizard/gchat_dm_wizard_views.xml',
         'data/ir_cron.xml',
         'data/params.xml',
     ],

@@ -81,7 +81,62 @@ class ProjectTask(models.Model):
             except Exception as e:
                 _logger.error(f"Failed to send Google Chat notification for task {self.name}: {str(e)}")
         
+        # Send DM notification when stage changes
+        if 'stage_id' in vals and self.user_id and self.user_id.email:
+            try:
+                self._send_stage_change_dm(vals['stage_id'])
+            except Exception as e:
+                _logger.error(f"Failed to send stage change DM for task {self.name}: {str(e)}")
+        
         return result
+
+    def _send_stage_change_dm(self, new_stage_id):
+        """Send DM notification when task stage changes."""
+        try:
+            # Get configuration
+            config = self.env['gchat.config'].search([
+                ('company_id', '=', self.company_id.id),
+                ('is_active', '=', True)
+            ], limit=1)
+            
+            if not config:
+                return
+            
+            # Get stage name
+            stage = self.env['project.task.type'].browse(new_stage_id)
+            stage_name = stage.name if stage else 'Unknown'
+            
+            # Prepare DM content
+            title = f"Task Stage Updated: {self.name}"
+            subtitle = f"Stage changed to: {stage_name}"
+            
+            items = [
+                f"📋 Task: {self.name}",
+                f"🔄 New Stage: {stage_name}",
+                f"👤 Assignee: {self.user_id.name}",
+                f"📅 Deadline: {self.date_deadline.strftime('%Y-%m-%d') if self.date_deadline else 'Not set'}"
+            ]
+            
+            # Get Odoo URL for the task
+            base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+            task_url = f"{base_url}/web#id={self.id}&model=project.task&view_type=form"
+            
+            # Send DM
+            config.send_card_to_user(
+                user_email=self.user_id.email,
+                title=title,
+                subtitle=subtitle,
+                items=items,
+                button_text="Open Task",
+                button_url=task_url,
+                thread_key=str(self.id)
+            )
+            
+            _logger.info(f"Stage change DM sent to {self.user_id.email} for task {self.name}")
+            
+        except Exception as e:
+            _logger.error(f"Failed to send stage change DM: {str(e)}")
+            raise
 
     def action_view_gchat_thread(self):
         """Open Google Chat thread view."""
