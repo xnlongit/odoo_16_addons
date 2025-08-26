@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Parent menu -->
+    <menuitem id="menu_tiktok_root" name="TikTok Shop"/>
+    <!-- Tree -->
+    <record id="view_tiktok_shop_config_tree" model="ir.ui.view">
+        <field name="name">tiktok.shop.config.tree</field>
+        <field name="model">tiktok.shop.config</field>
+        <field name="arch" type="xml">
+            <tree string="TikTok Shop Configurations">
+                <field name="name"/>
+                <field name="app_key"/>
+                <field name="is_active"/>
+                <field name="sync_status"/>
+                <field name="last_sync"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form -->
+    <record id="view_tiktok_shop_config_form" model="ir.ui.view">
+        <field name="name">tiktok.shop.config.form</field>
+        <field name="model">tiktok.shop.config</field>
+        <field name="arch" type="xml">
+            <form string="TikTok Shop Config">
+                <header>
+                    <button name="button_get_authorization_code" type="object" string="Get Authorized Code"/>
+                    <button name="button_get_access_token" type="object" string="Get Access Token"/>
+                    <button name="action_refresh_token" type="object" string="Refresh Token" class="btn-secondary"/>
+                    <button name="%(tiktok_shop_integration.action_tiktok_api_tester_wizard)d" type="action" string="Test API" class="btn-secondary"/>
+                    <button name="%(tiktok_shop_integration.action_tiktok_api_tester_wizard)d" type="action" string="Orders (202309)" class="btn-secondary">
+                        <context>{'default_preset': 'get_order_list_202309'}</context>
+                    </button>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="is_active"/>
+                            <field name="version"/>
+                            <field name="app_key"/>
+                            <field name="app_secret" password="True"/>
+                        </group>
+                        <group>
+                            <field name="access_token"/>
+                            <field name="refresh_token"/>
+                            <field name="token_expiry"/>
+                            <field name="last_sync"/>
+                            <field name="sync_status"/>
+                        </group>
+                    </group>
+                    <group string="Errors">
+                        <field name="error_message" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action + Menu -->
+    <record id="action_tiktok_shop_config" model="ir.actions.act_window">
+        <field name="name">Connections</field>
+        <field name="res_model">tiktok.shop.config</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_tiktok_shop_config_list"
+              name="Connections"
+              parent="menu_tiktok_root"
+              action="action_tiktok_shop_config"
+              sequence="10"/>
+
+</odoo>

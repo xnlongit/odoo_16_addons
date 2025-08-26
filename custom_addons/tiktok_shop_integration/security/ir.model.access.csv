@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tiktok_shop_config_all,tiktok_shop_config_all,model_tiktok_shop_config,,1,1,1,1
+access_tiktok_api_tester_wizard_all,tiktok_api_tester_wizard_all,model_tiktok_api_tester_wizard,,1,1,1,1

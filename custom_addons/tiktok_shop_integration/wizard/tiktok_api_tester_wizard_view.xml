@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_tiktok_api_tester_wizard_form" model="ir.ui.view">
+        <field name="name">tiktok.api.tester.wizard.form</field>
+        <field name="model">tiktok.api.tester.wizard</field>
+        <field name="arch" type="xml">
+            <form string="TikTok API Tester">
+                <group>
+                    <field name="preset"/>
+                    <field name="config_id" options="{'no_create': True}"/>
+                    <field name="method"/>
+                    <field name="url" placeholder="/order/202309/orders"/>
+                    <field name="content_type"/>
+                    <field name="query_json" placeholder='{"page_size":20, "page_number":1}'/>
+                    <field name="body_json" placeholder='{"foo":"bar"}'/>
+                </group>
+                <footer>
+                    <button name="action_execute" type="object" string="Execute" class="btn-primary"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+                <group string="Response">
+                    <field name="response_text" nolabel="1" colspan="4"/>
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tiktok_api_tester_wizard" model="ir.actions.act_window">
+        <field name="name">TikTok API Tester</field>
+        <field name="res_model">tiktok.api.tester.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_config_id': active_id}</field>
+    </record>
+
+    <!-- Add button on config form via inherit -->
+    <record id="view_tiktok_shop_config_form_inherit_api_tester" model="ir.ui.view">
+        <field name="name">tiktok.shop.config.form.api.tester.inherit</field>
+        <field name="model">tiktok.shop.config</field>
+        <field name="inherit_id" ref="tiktok_shop_integration.view_tiktok_shop_config_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/header" position="inside">
+                <button name="%(tiktok_shop_integration.action_tiktok_api_tester_wizard)d" type="action" string="Test API" class="btn-secondary"/>
+            </xpath>
+        </field>
+    </record>
+</odoo> 

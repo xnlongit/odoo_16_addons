@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Main Google Chat Menu -->
+    <menuitem id="menu_gchat_root"
+              name="Tiktok Shop"
+              sequence="50"/>
+
+    <!-- Connections Menu -->
+    <menuitem id="menu_gchat_connections"
+              name="Connections"
+              parent="tiktok_shop_integration.menu_gchat_root"
+              sequence="10"/>
+</odoo> 
