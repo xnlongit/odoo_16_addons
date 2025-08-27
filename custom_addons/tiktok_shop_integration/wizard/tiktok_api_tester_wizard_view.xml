@@ -32,16 +32,4 @@
         <field name="target">new</field>
         <field name="context">{'default_config_id': active_id}</field>
     </record>
-
-    <!-- Add button on config form via inherit -->
-    <record id="view_tiktok_shop_config_form_inherit_api_tester" model="ir.ui.view">
-        <field name="name">tiktok.shop.config.form.api.tester.inherit</field>
-        <field name="model">tiktok.shop.config</field>
-        <field name="inherit_id" ref="tiktok_shop_integration.view_tiktok_shop_config_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//form/header" position="inside">
-                <button name="%(tiktok_shop_integration.action_tiktok_api_tester_wizard)d" type="action" string="Test API" class="btn-secondary"/>
-            </xpath>
-        </field>
-    </record>
 </odoo> 

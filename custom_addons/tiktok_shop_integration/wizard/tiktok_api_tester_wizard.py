@@ -11,6 +11,7 @@ class TiktokApiTesterWizard(models.TransientModel):
     preset = fields.Selection([
         ('none', 'Custom'),
         ('get_order_list_202309', 'Get Order List (202309)'),
+        ('search_package_202309', 'Search Package (202309)'),
     ], string='Preset', default='none')
 
     config_id = fields.Many2one('tiktok.shop.config', string='Connection', required=True)
@@ -47,6 +48,26 @@ class TiktokApiTesterWizard(models.TransientModel):
             }
             self.query_json = json.dumps(template, ensure_ascii=False)
             self.body_json = False
+        elif self.preset == 'search_package_202309':
+            self.method = 'POST'
+            self.url = '/fulfillment/202309/packages/search'
+            # For POST requests, parameters typically go in body
+            template = {
+                "shop_cipher": "",
+                "page_size": 20,
+                "page_number": 1,
+                # Optional filters:
+                # "package_id_list": ["PKG123", "PKG456"],
+                # "tracking_number_list": ["TRK123", "TRK456"],
+                # "order_id_list": ["ORD123", "ORD456"],
+                # "create_time_ge": 0,
+                # "create_time_le": 0,
+                # "update_time_ge": 0,
+                # "update_time_le": 0,
+                # "package_status": "",  # e.g., "CREATED", "SHIPPED", "DELIVERED"
+            }
+            self.body_json = json.dumps(template, ensure_ascii=False)
+            self.query_json = False
         else:
             pass
 
@@ -86,6 +107,17 @@ class TiktokApiTesterWizard(models.TransientModel):
             merged_query['page_size'] = 20
         return merged_query
 
+    def _validate_search_package_body(self, body):
+        # For POST requests, validate body parameters
+        if not body.get('shop_cipher') and not body.get('shop_id'):
+            raise UserError(_("Thiếu 'shop_cipher' hoặc 'shop_id' cho Search Package."))
+        # Default page_size and page_number if missing
+        if not body.get('page_size'):
+            body['page_size'] = 20
+        if not body.get('page_number'):
+            body['page_number'] = 1
+        return body
+
     def action_execute(self):
         self.ensure_one()
         config = self.config_id
@@ -118,6 +150,8 @@ class TiktokApiTesterWizard(models.TransientModel):
         # Preset-specific validations
         if self.preset == 'get_order_list_202309':
             merged_query = self._validate_get_order_list_query(merged_query)
+        elif self.preset == 'search_package_202309':
+            body = self._validate_search_package_body(body)
 
         try:
             result = config.api_request(

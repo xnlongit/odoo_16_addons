@@ -29,9 +29,6 @@
                     <button name="button_get_access_token" type="object" string="Get Access Token"/>
                     <button name="action_refresh_token" type="object" string="Refresh Token" class="btn-secondary"/>
                     <button name="%(tiktok_shop_integration.action_tiktok_api_tester_wizard)d" type="action" string="Test API" class="btn-secondary"/>
-                    <button name="%(tiktok_shop_integration.action_tiktok_api_tester_wizard)d" type="action" string="Orders (202309)" class="btn-secondary">
-                        <context>{'default_preset': 'get_order_list_202309'}</context>
-                    </button>
                 </header>
                 <sheet>
                     <group>
@@ -47,6 +44,7 @@
                             <field name="access_token"/>
                             <field name="refresh_token"/>
                             <field name="token_expiry"/>
+                            <field name="refresh_token_expiry"/>
                             <field name="last_sync"/>
                             <field name="sync_status"/>
                         </group>

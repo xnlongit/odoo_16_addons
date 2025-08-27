@@ -28,6 +28,7 @@ class TiktokShopConfig(models.Model):
     refresh_token = fields.Char('Refresh Token')
     access_token = fields.Char('Access Token')
     token_expiry = fields.Datetime('Token Expiry (UTC)')
+    refresh_token_expiry = fields.Datetime('Refresh Token Expiry (UTC)')
 
     # Status
     last_sync = fields.Datetime('Last Sync')
@@ -153,39 +154,69 @@ class TiktokShopConfig(models.Model):
     def action_refresh_token(self):
         self.ensure_one()
         self._ensure_conf()
-        if not self.refresh_token:
+        icp = self.env['ir.config_parameter'].sudo()
+        refresh_token = self.refresh_token or icp.get_param('tiktok.refresh_token')
+        if not refresh_token:
             raise UserError(_("Thiếu refresh_token."))
 
         url = f"{AUTH_BASE}/api/v2/token/refresh"
+        form_data = {
+            "app_key": self.app_key,
+            "app_secret": self.app_secret,
+            "refresh_token": refresh_token,
+            "grant_type": "refresh_token",
+        }
         try:
             r = requests.post(
                 url,
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
-                data={
-                    "app_key": self.app_key,
-                    "app_secret": self.app_secret,
-                    "refresh_token": self.refresh_token,
-                    "grant_type": "refresh_token",
-                },
+                data=form_data,
                 timeout=30,
             )
+            if r.status_code == 404:
+                r = requests.get(url, params=form_data, timeout=30)
             data = r.json() if r.headers.get('Content-Type','').startswith('application/json') else {}
             if r.status_code != 200 or not data or str(data.get('code')) not in ('0', 0):
                 raise UserError(_("Refresh thất bại: %s") % (r.text[:500],))
             d = data.get('data') or {}
             access = d.get('access_token')
-            refresh = d.get('refresh_token') or self.refresh_token
-            expires = d.get('expires_in')
+            new_refresh = d.get('refresh_token') or refresh_token
+            expires_in = d.get('expires_in')  # seconds (older style)
+            at_exp_epoch = d.get('access_token_expire_in')  # epoch seconds (newer style)
+            rt_exp_epoch = d.get('refresh_token_expire_in')  # epoch seconds (newer style)
 
             vals = {}
             if access:
                 vals['access_token'] = access
-            if refresh:
-                vals['refresh_token'] = refresh
-            if expires:
-                vals['token_expiry'] = self._utcnow() + timedelta(seconds=int(expires))
+                icp.set_param('tiktok.access_token', access)
+            if new_refresh:
+                vals['refresh_token'] = new_refresh
+                icp.set_param('tiktok.refresh_token', new_refresh)
+
+            # Access token expiry: prefer epoch if provided; else fallback to expires_in seconds
+            if at_exp_epoch:
+                try:
+                    vals['token_expiry'] = datetime.utcfromtimestamp(int(at_exp_epoch))
+                except Exception:
+                    pass
+            elif expires_in:
+                vals['token_expiry'] = self._utcnow() + timedelta(seconds=int(expires_in))
+
+            # Refresh token expiry if provided
+            if rt_exp_epoch:
+                try:
+                    vals['refresh_token_expiry'] = datetime.utcfromtimestamp(int(rt_exp_epoch))
+                except Exception:
+                    pass
+
+            # Persist simple hints in ICP (optional)
+            if vals.get('token_expiry'):
+                icp.set_param('tiktok.access_token_expires_at', vals['token_expiry'].strftime('%Y-%m-%d %H:%M:%S'))
+            if vals.get('refresh_token_expiry'):
+                icp.set_param('tiktok.refresh_token_expires_at', vals['refresh_token_expiry'].strftime('%Y-%m-%d %H:%M:%S'))
+
             self.write(vals)
-            _logger.info("TikTok refreshed. New expiry UTC: %s", vals.get('token_expiry'))
+            _logger.info("TikTok refreshed. Access expiry UTC: %s; Refresh expiry UTC: %s", vals.get('token_expiry'), vals.get('refresh_token_expiry'))
             return True
         except Exception as e:
             self._set_error(str(e))
