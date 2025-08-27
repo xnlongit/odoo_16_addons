@@ -14,3 +14,4 @@ access_gchat_event_log_user,gchat.event.log.user,model_gchat_event_log,group_gch
 access_gchat_space_create_wizard_user,gchat.space.create.wizard.user,model_gchat_space_create_wizard,group_gchat_user,1,1,1,0
 access_gchat_space_link_wizard_user,gchat.space.link.wizard.user,model_gchat_space_link_wizard,group_gchat_user,1,1,1,0
 access_gchat_message_wizard_user,gchat.message.wizard.user,model_gchat_message_wizard,group_gchat_user,1,1,1,0
+access_gchat_dm_wizard_user,gchat.dm.wizard.user,model_gchat_dm_wizard,group_gchat_user,1,1,1,0

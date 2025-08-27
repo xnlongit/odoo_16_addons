@@ -196,6 +196,12 @@ class GchatWebhookController(http.Controller):
             <body>
                 <h2>Xác thực thành công!</h2>
                 <p>Đã lưu token Google Chat thành công.</p>
+                <p>Bây giờ bạn có thể:</p>
+                <ul>
+                    <li>Gửi DM với cardsV2</li>
+                    <li>Tạo và quản lý spaces</li>
+                    <li>Gửi thông báo khi task thay đổi stage</li>
+                </ul>
                 <p><a href="/web">Quay lại Odoo</a></p>
             </body>
             </html>
